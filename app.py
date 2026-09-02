@@ -86,7 +86,42 @@ def privacy():
 
 @app.route("/profile")
 def profile():
-    return "Profile page — coming in Step 4"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    user = {
+        "name": "Demo User",
+        "email": "demo@spendly.com",
+        "initials": "DU",
+        "member_since": "March 2024",
+    }
+
+    stats = [
+        {"label": "Total Spent", "value": "$1,248.50"},
+        {"label": "Transactions", "value": "24"},
+        {"label": "Top Category", "value": "Food"},
+    ]
+
+    transactions = [
+        {"date": "Aug 24, 2026", "description": "Grocery shopping", "category": "Food", "amount": "$45.50"},
+        {"date": "Aug 22, 2026", "description": "Monthly bus pass", "category": "Transport", "amount": "$30.00"},
+        {"date": "Aug 20, 2026", "description": "Electricity bill", "category": "Bills", "amount": "$85.00"},
+        {"date": "Aug 18, 2026", "description": "Movie tickets", "category": "Entertainment", "amount": "$22.99"},
+        {"date": "Aug 15, 2026", "description": "New shoes", "category": "Shopping", "amount": "$150.00"},
+    ]
+
+    categories = [
+        {"category": "Food", "amount": "$437.00", "percent": 35, "width_class": "bar-w-35"},
+        {"category": "Transport", "amount": "$249.70", "percent": 20, "width_class": "bar-w-20"},
+        {"category": "Bills", "amount": "$324.60", "percent": 25, "width_class": "bar-w-25"},
+        {"category": "Entertainment", "amount": "$112.40", "percent": 10, "width_class": "bar-w-10"},
+        {"category": "Shopping", "amount": "$124.80", "percent": 10, "width_class": "bar-w-10"},
+    ]
+
+    return render_template(
+        "profile.html", user=user, stats=stats,
+        transactions=transactions, categories=categories,
+    )
 
 
 @app.route("/expenses/add")
