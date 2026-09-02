@@ -24,12 +24,13 @@
       <div class="stat-tile">
         <span class="stat-label">{{ s.label }}</span>
         <span class="stat-value">{{ s.value }}</span>
+        <span class="stat-delta stat-delta-{{ s.trend }}">{{ s.delta }}</span>
       </div>
       {% endfor %}
     </div>
 
     <div>
-      <h2 class="profile-section-title">Recent Transactions</h2>
+      <h2 class="profile-section-title"><i data-lucide="receipt" class="section-icon"></i>Recent Transactions</h2>
       <div class="transaction-card">
         <table class="transaction-table">
           <thead>
@@ -57,7 +58,7 @@
     </div>
 
     <div>
-      <h2 class="profile-section-title">Category Breakdown</h2>
+      <h2 class="profile-section-title"><i data-lucide="pie-chart" class="section-icon"></i>Category Breakdown</h2>
       <div class="category-card">
         {% for c in categories %}
         <div class="category-row">

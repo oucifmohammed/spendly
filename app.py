@@ -97,25 +97,25 @@ def profile():
     }
 
     stats = [
-        {"label": "Total Spent", "value": "$1,248.50"},
-        {"label": "Transactions", "value": "24"},
-        {"label": "Top Category", "value": "Food"},
+        {"label": "Total Spent", "value": "₹1,248.50", "delta": "+8.2% vs last month", "trend": "negative"},
+        {"label": "Transactions", "value": "24", "delta": "+3 vs last month", "trend": "neutral"},
+        {"label": "Top Category", "value": "Food", "delta": "35% of spend", "trend": "neutral"},
     ]
 
     transactions = [
-        {"date": "Aug 24, 2026", "description": "Grocery shopping", "category": "Food", "amount": "$45.50"},
-        {"date": "Aug 22, 2026", "description": "Monthly bus pass", "category": "Transport", "amount": "$30.00"},
-        {"date": "Aug 20, 2026", "description": "Electricity bill", "category": "Bills", "amount": "$85.00"},
-        {"date": "Aug 18, 2026", "description": "Movie tickets", "category": "Entertainment", "amount": "$22.99"},
-        {"date": "Aug 15, 2026", "description": "New shoes", "category": "Shopping", "amount": "$150.00"},
+        {"date": "Aug 24, 2026", "description": "Grocery shopping", "category": "Food", "amount": "₹45.50"},
+        {"date": "Aug 22, 2026", "description": "Monthly bus pass", "category": "Transport", "amount": "₹30.00"},
+        {"date": "Aug 20, 2026", "description": "Electricity bill", "category": "Bills", "amount": "₹85.00"},
+        {"date": "Aug 18, 2026", "description": "Movie tickets", "category": "Entertainment", "amount": "₹22.99"},
+        {"date": "Aug 15, 2026", "description": "New shoes", "category": "Shopping", "amount": "₹150.00"},
     ]
 
     categories = [
-        {"category": "Food", "amount": "$437.00", "percent": 35, "width_class": "bar-w-35"},
-        {"category": "Transport", "amount": "$249.70", "percent": 20, "width_class": "bar-w-20"},
-        {"category": "Bills", "amount": "$324.60", "percent": 25, "width_class": "bar-w-25"},
-        {"category": "Entertainment", "amount": "$112.40", "percent": 10, "width_class": "bar-w-10"},
-        {"category": "Shopping", "amount": "$124.80", "percent": 10, "width_class": "bar-w-10"},
+        {"category": "Food", "amount": "₹437.00", "percent": 35, "width_class": "bar-w-35"},
+        {"category": "Transport", "amount": "₹249.70", "percent": 20, "width_class": "bar-w-20"},
+        {"category": "Bills", "amount": "₹324.60", "percent": 25, "width_class": "bar-w-25"},
+        {"category": "Entertainment", "amount": "₹112.40", "percent": 10, "width_class": "bar-w-10"},
+        {"category": "Shopping", "amount": "₹124.80", "percent": 10, "width_class": "bar-w-10"},
     ]
 
     return render_template(
