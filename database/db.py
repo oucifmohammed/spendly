@@ -109,3 +109,70 @@ def get_user_by_email(email):
         ).fetchone()
     finally:
         conn.close()
+
+
+def get_recent_expenses(user_id, limit=5):
+    conn = get_db()
+    try:
+        today = date.today()
+        month_str = f"{today.year:04d}-{today.month:02d}"
+        return conn.execute(
+            """SELECT * FROM expenses
+               WHERE user_id = ? AND strftime('%Y-%m', date) = ?
+               ORDER BY date DESC, id DESC
+               LIMIT ?""",
+            (user_id, month_str, limit),
+        ).fetchall()
+    finally:
+        conn.close()
+
+
+def get_user_by_id(user_id):
+    conn = get_db()
+    try:
+        return conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    finally:
+        conn.close()
+
+
+def get_monthly_total(user_id, year, month):
+    conn = get_db()
+    try:
+        month_str = f"{year:04d}-{month:02d}"
+        row = conn.execute(
+            """SELECT COALESCE(SUM(amount), 0) AS total FROM expenses
+               WHERE user_id = ? AND strftime('%Y-%m', date) = ?""",
+            (user_id, month_str),
+        ).fetchone()
+        return row["total"]
+    finally:
+        conn.close()
+
+
+def get_monthly_transaction_count(user_id, year, month):
+    conn = get_db()
+    try:
+        month_str = f"{year:04d}-{month:02d}"
+        row = conn.execute(
+            """SELECT COUNT(*) AS count FROM expenses
+               WHERE user_id = ? AND strftime('%Y-%m', date) = ?""",
+            (user_id, month_str),
+        ).fetchone()
+        return row["count"]
+    finally:
+        conn.close()
+
+
+def get_monthly_category_totals(user_id, year, month):
+    conn = get_db()
+    try:
+        month_str = f"{year:04d}-{month:02d}"
+        return conn.execute(
+            """SELECT category, SUM(amount) AS total FROM expenses
+               WHERE user_id = ? AND strftime('%Y-%m', date) = ?
+               GROUP BY category
+               ORDER BY total DESC""",
+            (user_id, month_str),
+        ).fetchall()
+    finally:
+        conn.close()

@@ -3,7 +3,20 @@ import sqlite3
 from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import check_password_hash
 
-from database.db import get_db, init_db, seed_db, create_user, get_user_by_email
+from datetime import date, datetime
+
+from database.db import (
+    get_db,
+    init_db,
+    seed_db,
+    create_user,
+    get_user_by_email,
+    get_user_by_id,
+    get_recent_expenses,
+    get_monthly_total,
+    get_monthly_transaction_count,
+    get_monthly_category_totals,
+)
 
 app = Flask(__name__)
 app.secret_key = "dev-only-secret-key-change-in-production"
@@ -89,34 +102,78 @@ def profile():
     if not session.get("user_id"):
         return redirect(url_for("login"))
 
+    user_id = session["user_id"]
+    today = date.today()
+    year, month = today.year, today.month
+
+    db_user = get_user_by_id(user_id)
+    initials = "".join(part[0].upper() for part in db_user["name"].split()[:2]) or "?"
+    member_since = datetime.strptime(db_user["created_at"][:10], "%Y-%m-%d").strftime("%B %Y")
     user = {
-        "name": "Demo User",
-        "email": "demo@spendly.com",
-        "initials": "DU",
-        "member_since": "March 2024",
+        "name": db_user["name"],
+        "email": db_user["email"],
+        "initials": initials,
+        "member_since": member_since,
     }
 
+    if month == 1:
+        prev_year, prev_month = year - 1, 12
+    else:
+        prev_year, prev_month = year, month - 1
+
+    this_month_total = get_monthly_total(user_id, year, month)
+    last_month_total = get_monthly_total(user_id, prev_year, prev_month)
+    if last_month_total == 0:
+        spend_delta, spend_trend = "No data for last month", "neutral"
+    elif this_month_total == last_month_total:
+        spend_delta, spend_trend = "No change vs last month", "neutral"
+    else:
+        pct_change = (this_month_total - last_month_total) / last_month_total * 100
+        spend_delta = f"{pct_change:+.1f}% vs last month"
+        spend_trend = "negative" if pct_change > 0 else "positive"
+
+    this_month_count = get_monthly_transaction_count(user_id, year, month)
+    last_month_count = get_monthly_transaction_count(user_id, prev_year, prev_month)
+    count_delta = f"{this_month_count - last_month_count:+d} vs last month"
+
+    category_totals = get_monthly_category_totals(user_id, year, month)
+    if category_totals:
+        top = category_totals[0]
+        top_percent = (top["total"] / this_month_total * 100) if this_month_total else 0
+        top_value, top_delta = top["category"], f"{top_percent:.0f}% of spend"
+    else:
+        top_value, top_delta = "—", "No data"
+
     stats = [
-        {"label": "Total Spent", "value": "₹1,248.50", "delta": "+8.2% vs last month", "trend": "negative"},
-        {"label": "Transactions", "value": "24", "delta": "+3 vs last month", "trend": "neutral"},
-        {"label": "Top Category", "value": "Food", "delta": "35% of spend", "trend": "neutral"},
+        {"label": "Total Spent", "value": f"₹{this_month_total:,.2f}", "delta": spend_delta, "trend": spend_trend},
+        {"label": "Transactions", "value": str(this_month_count), "delta": count_delta, "trend": "neutral"},
+        {"label": "Top Category", "value": top_value, "delta": top_delta, "trend": "neutral"},
     ]
 
+    recent_expenses = get_recent_expenses(user_id, limit=5)
     transactions = [
-        {"date": "Aug 24, 2026", "description": "Grocery shopping", "category": "Food", "amount": "₹45.50"},
-        {"date": "Aug 22, 2026", "description": "Monthly bus pass", "category": "Transport", "amount": "₹30.00"},
-        {"date": "Aug 20, 2026", "description": "Electricity bill", "category": "Bills", "amount": "₹85.00"},
-        {"date": "Aug 18, 2026", "description": "Movie tickets", "category": "Entertainment", "amount": "₹22.99"},
-        {"date": "Aug 15, 2026", "description": "New shoes", "category": "Shopping", "amount": "₹150.00"},
+        {
+            "date": datetime.strptime(row["date"], "%Y-%m-%d").strftime("%b %d, %Y"),
+            "description": row["description"] or "",
+            "category": row["category"],
+            "amount": f"₹{row['amount']:,.2f}",
+        }
+        for row in recent_expenses
     ]
 
-    categories = [
-        {"category": "Food", "amount": "₹437.00", "percent": 35, "width_class": "bar-w-35"},
-        {"category": "Transport", "amount": "₹249.70", "percent": 20, "width_class": "bar-w-20"},
-        {"category": "Bills", "amount": "₹324.60", "percent": 25, "width_class": "bar-w-25"},
-        {"category": "Entertainment", "amount": "₹112.40", "percent": 10, "width_class": "bar-w-10"},
-        {"category": "Shopping", "amount": "₹124.80", "percent": 10, "width_class": "bar-w-10"},
-    ]
+    category_total_for_month = get_monthly_total(user_id, year, month)
+    category_rows = get_monthly_category_totals(user_id, year, month)
+    categories = []
+    for row in category_rows:
+        amount = row["total"]
+        raw_percent = (amount / category_total_for_month * 100) if category_total_for_month else 0
+        bar_percent = max(5, min(100, int(round(raw_percent / 5) * 5)))
+        categories.append({
+            "category": row["category"],
+            "amount": f"₹{amount:,.2f}",
+            "percent": round(raw_percent),
+            "width_class": f"bar-w-{bar_percent}",
+        })
 
     return render_template(
         "profile.html", user=user, stats=stats,
